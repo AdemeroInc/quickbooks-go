@@ -53,7 +53,7 @@ func (c *Client) GetEmployees(startpos int, pageSizeOverride int) ([]Employee, e
 			MaxResults    int
 		}
 	}
-	q := "SELECT * FROM Employee ORDERBY Id STARTPOSITION " +
+	q := "SELECT * FROM Employee ORDERBY FamilyName,GivenName STARTPOSITION " +
 		strconv.Itoa(startpos) + " MAXRESULTS " + strconv.Itoa(pageSize)
 	err := c.query(q, &r)
 	if err != nil {
