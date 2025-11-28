@@ -7,18 +7,18 @@ Package quickbooks provides access to Intuit's QuickBooks Online API.
 NOTE: This library is very incomplete. I just implemented the minimum for my
 use case. Pull requests welcome :)
 
- // Do this after you go through the normal OAuth process.
- var client = oauth2.NewClient(ctx, tokenSource)
+	 // Do this after you go through the normal OAuth process.
+	 var client = oauth2.NewClient(ctx, tokenSource)
 
- // Initialize the client handle.
- var qb = quickbooks.Client{
-	 Client: client,
-	 Endpoint: quickbooks.SandboxEndpoint,
-	 RealmID: "some company account ID"'
- }
+	 // Initialize the client handle.
+	 var qb = quickbooks.Client{
+		 Client: client,
+		 Endpoint: quickbooks.SandboxEndpoint,
+		 RealmID: "some company account ID"'
+	 }
 
- // Make a request!
- var companyInfo, err = qb.FetchCompanyInfo()
+	 // Make a request!
+	 var companyInfo, err = qb.FetchCompanyInfo()
 */
 package quickbooks
 
@@ -64,10 +64,10 @@ func NewQuickbooksClient(clientId string, clientSecret string, realmID string, i
 
 // FetchCompanyInfo returns the QuickBooks CompanyInfo object. This is a good
 // test to check whether you're connected.
-func (c *Client) FetchCompanyInfo() (*CompanyInfo, error) {
+func (c *Client) FetchCompanyInfo() (*CompanyInfo, error, int) {
 	var u, err = url.Parse(string(c.Endpoint))
 	if err != nil {
-		return nil, err
+		return nil, err, 0
 	}
 	u.Path = "/v3/company/" + c.RealmID + "/companyinfo/" + c.RealmID
 	var v = url.Values{}
@@ -76,18 +76,18 @@ func (c *Client) FetchCompanyInfo() (*CompanyInfo, error) {
 	var req *http.Request
 	req, err = http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, err, 0
 	}
 	req.Header.Add("Accept", "application/json")
 	var res *http.Response
 	res, err = c.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, err, res.StatusCode
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, parseFailure(res)
+		return nil, parseFailure(res), res.StatusCode
 	}
 
 	var r struct {
@@ -95,7 +95,7 @@ func (c *Client) FetchCompanyInfo() (*CompanyInfo, error) {
 		Time        Date
 	}
 	err = json.NewDecoder(res.Body).Decode(&r)
-	return &r.CompanyInfo, err
+	return &r.CompanyInfo, err, res.StatusCode
 }
 
 // query makes the specified QBO `query` and unmarshals the result into `out`
